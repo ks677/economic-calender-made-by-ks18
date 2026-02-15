@@ -1,0 +1,77 @@
+'use client';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+
+interface Event {
+  date: string;
+  country: string;
+  event: string;
+  impact: string;
+  forecast: string | null;
+  actual: string | null;
+}
+
+export default function Dashboard() {
+  const [events, setEvents] = useState<Event[]>([]);
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get(
+        `https://financialmodelingprep.com/api/v3/economic_calendar?apikey=YOUR_API_KEY`
+      );
+      setEvents(res.data.slice(0, 50));
+    } catch (err) {
+      console.error('Error fetching calendar:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 1000); // every second
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="min-h-screen p-6 bg-gray-900 text-gray-200">
+      <h1 className="text-4xl font-bold mb-6 text-center">
+        Economic Calendar Made by KS
+      </h1>
+      <div className="overflow-x-auto">
+        <table className="min-w-full border border-gray-700">
+          <thead className="bg-gray-800 text-white">
+            <tr>
+              <th className="px-4 py-2">Date</th>
+              <th className="px-4 py-2">Country</th>
+              <th className="px-4 py-2">Event</th>
+              <th className="px-4 py-2">Impact</th>
+              <th className="px-4 py-2">Forecast</th>
+              <th className="px-4 py-2">Actual</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.map((ev, i) => (
+              <tr key={i} className="border-b border-gray-700">
+                <td className="px-4 py-2">{ev.date}</td>
+                <td className="px-4 py-2">{ev.country}</td>
+                <td className="px-4 py-2">{ev.event}</td>
+                <td
+                  className={`px-4 py-2 font-bold ${
+                    ev.impact?.toLowerCase() === 'high'
+                      ? 'text-red-500'
+                      : ev.impact?.toLowerCase() === 'medium'
+                      ? 'text-orange-400'
+                      : 'text-green-400'
+                  }`}
+                >
+                  {ev.impact}
+                </td>
+                <td className="px-4 py-2">{ev.forecast || '-'}</td>
+                <td className="px-4 py-2">{ev.actual || 'Pending'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
